@@ -1,0 +1,52 @@
+# RTK project-local filters — Shift Planner demo repo.
+#
+# RTK ya tiene módulos Rust nativos para vitest, tsc, eslint, git, gh,
+# npm, etc. Esos módulos son más eficientes que un filtro TOML, así que
+# NO los redefinimos aquí (hacerlo genera un warning de shadowing).
+#
+# Este archivo solo contiene filtros ADICIONALES para comandos que RTK
+# no cubre de forma nativa o donde queremos override del proyecto.
+# Docs: https://github.com/rtk-ai/rtk#custom-filters
+schema_version = 1
+
+# ── Vite build ─────────────────────────────────────────────────────
+# RTK no tiene módulo nativo para `vite build`.
+# Descartamos líneas de progreso y dejamos solo métricas finales.
+[filters.vite-build]
+description = "Vite build: solo métricas finales"
+match_command = "^(npx\\s+)?vite\\s+build"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^transforming",
+  "^rendering chunks",
+  "^computing gzip",
+]
+max_lines = 10
+on_empty = "vite build: ok"
+
+# ── npm install ────────────────────────────────────────────────────
+# Reduce el output verboso de install a solo errores y resumen.
+[filters.npm-install]
+description = "npm install: solo errores y resumen"
+match_command = "^npm\\s+install"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^npm warn",
+]
+max_lines = 15
+on_empty = "npm install: ok"
+
+# ──────────────────────────────────────────────────────────────────
+# Comandos nativos de RTK que usamos en este proyecto (no necesitan
+# filtro aquí, solo los documentamos como referencia educativa):
+#
+#   rtk vitest run          → solo failures + resumen (99% savings)
+#   rtk tsc --noEmit        → errores agrupados por archivo (83%)
+#   rtk lint <eslint args>  → violations agrupadas por regla (84%)
+#   rtk git status          → compact status (65%)
+#   rtk git diff            → compact diff (80%)
+#   rtk git log             → compact log (70%)
+#   rtk gh pr view <n>      → compact PR view (87%)
+# ──────────────────────────────────────────────────────────────────
