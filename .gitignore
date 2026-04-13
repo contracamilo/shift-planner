@@ -8,3 +8,5 @@ coverage
 *.log
 .vite
 .husky/_
+TODO_LOG.md
+.playwright-mcp/

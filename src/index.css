@@ -1,0 +1,309 @@
+/* === Reset & Base === */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input {
+  font: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* === Layout === */
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+/* === Header === */
+main > h1 {
+  background: #16213e;
+  color: #fff;
+  margin: 0 -1rem;
+  padding: 1.25rem 2rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* === Section cards (weekly & daily) === */
+section[aria-label='weekly-view'],
+section[aria-label='daily-view'] {
+  margin-top: 1.5rem;
+}
+
+section header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+section header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #16213e;
+}
+
+section header p {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* === Weekly view — day rows === */
+section[aria-label='weekly-view'] > ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+section[aria-label='weekly-view'] > ul > li {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+
+section[aria-label='weekly-view'] > ul > li:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Day button (navigate to day) */
+section[aria-label='weekly-view'] > ul > li > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0f3460;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.15s ease;
+}
+
+section[aria-label='weekly-view'] > ul > li > button:hover {
+  background: #eef2ff;
+}
+
+/* Shift pills inside each day */
+section[aria-label='weekly-view'] > ul > li > ul {
+  padding: 0.5rem 1rem 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+section[aria-label='weekly-view'] > ul > li > ul > li > button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  color: #334155;
+  background: #f1f5f9;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+}
+
+section[aria-label='weekly-view'] > ul > li > ul > li > button:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
+}
+
+/* === Daily view === */
+section[aria-label='daily-view'] header button {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4f46e5;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+section[aria-label='daily-view'] header button:hover {
+  background: #eef2ff;
+}
+
+section[aria-label='daily-view'] > p {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+section[aria-label='daily-view'] > ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+section[aria-label='daily-view'] > ul > li > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-size: 0.92rem;
+  color: #334155;
+  transition: all 0.15s ease;
+}
+
+section[aria-label='daily-view'] > ul > li > button:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #fafbff;
+}
+
+/* === Modal overlay === */
+[role='dialog'][aria-label='shift-editor'] {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* All direct children form a single visual card */
+[role='dialog'][aria-label='shift-editor'] > * {
+  width: min(400px, calc(100% - 2rem));
+  background: #fff;
+}
+
+[role='dialog'][aria-label='shift-editor'] h3 {
+  border-radius: 12px 12px 0 0;
+  padding: 1.25rem 1.5rem 0.75rem;
+  font-size: 1.05rem;
+  color: #16213e;
+}
+
+[role='dialog'][aria-label='shift-editor'] label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[role='dialog'][aria-label='shift-editor'] input {
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: #1a1a2e;
+  transition: border-color 0.15s ease;
+  background: #f8fafc;
+}
+
+[role='dialog'][aria-label='shift-editor'] input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  background: #fff;
+}
+
+[role='dialog'][aria-label='shift-editor'] > div:last-child {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  border-radius: 0 0 12px 12px;
+  padding: 1rem 1.5rem 1.25rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Cancel button */
+[role='dialog'][aria-label='shift-editor'] > div > button:first-child {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  transition: all 0.15s ease;
+}
+
+[role='dialog'][aria-label='shift-editor'] > div > button:first-child:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* Save button */
+[role='dialog'][aria-label='shift-editor'] > div > button:last-child {
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  background: #4f46e5;
+  transition: all 0.15s ease;
+}
+
+[role='dialog'][aria-label='shift-editor'] > div > button:last-child:hover {
+  background: #4338ca;
+}
+
+[role='dialog'][aria-label='shift-editor'] > div > button:last-child:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* === Loading & error states === */
+section p:only-child {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #94a3b8;
+}

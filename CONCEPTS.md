@@ -12,11 +12,11 @@ MCP es un estándar abierto para conectar un LLM con servicios externos: filesys
 
 ### ¿Dónde se configura?
 
-| Scope | Archivo | Se comparte por git |
-|-------|---------|---------------------|
-| Proyecto | `.mcp.json` (raíz del repo) | Sí |
-| Local | `~/.claude.json` | No |
-| Usuario | Sección en `~/.claude/settings.json` | No |
+| Scope    | Archivo                              | Se comparte por git |
+| -------- | ------------------------------------ | ------------------- |
+| Proyecto | `.mcp.json` (raíz del repo)          | Sí                  |
+| Local    | `~/.claude.json`                     | No                  |
+| Usuario  | Sección en `~/.claude/settings.json` | No                  |
 
 ### Configuración de este proyecto
 
@@ -27,12 +27,21 @@ Archivo `.mcp.json`:
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/ruta/al/proyecto"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/ruta/al/proyecto"
+      ]
     },
     "github": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
     }
   }
 }
@@ -40,6 +49,7 @@ Archivo `.mcp.json`:
 
 - `filesystem`: le da a Claude acceso de lectura/escritura al directorio del proyecto vía MCP (complementa los tools nativos Read/Write).
 - `github`: le da acceso a repos, issues, PRs y releases de GitHub. Requiere un token con scope `repo`.
+- `playwright`: le da a Claude un navegador Chromium controlable para navegar, hacer click, tomar screenshots, etc. Sin config adicional.
 
 ### Cómo verificar
 
@@ -60,6 +70,63 @@ claude mcp add --transport stdio mi-server -- npx -y @mi-org/mi-mcp-server
 # O editar .mcp.json directamente.
 ```
 
+### Configuración de Playwright (browser automation)
+
+El MCP de Playwright le da a Claude un **navegador real** que puede controlar: navegar a URLs, hacer click, rellenar formularios, tomar screenshots y leer el DOM.
+
+**Paso 1 — Agregar al `.mcp.json`:**
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+No requiere tokens ni variables de entorno. Solo `npx`.
+
+**Paso 2 — Verificar:**
+
+```
+/mcp
+```
+
+Debe aparecer `playwright` en verde.
+
+**Paso 3 — Usar:**
+
+```
+Abre el navegador y navega a http://localhost:5173
+```
+
+Claude invoca `browser_navigate` y abre un Chromium controlado. Desde ahí puedes pedirle cosas como:
+
+```
+Toma un screenshot de la página actual
+Haz click en el botón "Agregar turno"
+Llena el formulario con nombre "Juan" y horario "9:00-17:00"
+```
+
+**Tools principales de Playwright:**
+
+| Tool                      | Qué hace                                     |
+| ------------------------- | -------------------------------------------- |
+| `browser_navigate`        | Navega a una URL                             |
+| `browser_snapshot`        | Lee el estado actual del DOM (accesibilidad) |
+| `browser_click`           | Click en un elemento                         |
+| `browser_fill_form`       | Rellena campos de formulario                 |
+| `browser_take_screenshot` | Captura la pantalla                          |
+| `browser_press_key`       | Presiona una tecla                           |
+| `browser_tabs`            | Lista pestañas abiertas                      |
+| `browser_close`           | Cierra el navegador                          |
+
+**Nota:** El navegador corre con `--no-sandbox` por defecto, lo que genera un warning en la barra del navegador. Es esperado y no afecta la funcionalidad para desarrollo local.
+
 ### Ejemplo de uso en la demo
 
 ```
@@ -78,23 +145,22 @@ Un subagente es un **contexto aislado** que Claude Code puede invocar para deleg
 
 ### ¿Dónde se configura?
 
-| Scope | Ruta | Se comparte por git |
-|-------|------|---------------------|
-| Proyecto | `.claude/agents/nombre.md` | Sí |
-| Personal | `~/.claude/agents/nombre.md` | No |
+| Scope    | Ruta                         | Se comparte por git |
+| -------- | ---------------------------- | ------------------- |
+| Proyecto | `.claude/agents/nombre.md`   | Sí                  |
+| Personal | `~/.claude/agents/nombre.md` | No                  |
 
 ### Formato del archivo
 
 ```yaml
 ---
-name: nombre-del-agente        # identificador único
-description: >                  # cuándo delegar a este agente
+name: nombre-del-agente # identificador único
+description: > # cuándo delegar a este agente
   Describe brevemente qué hace. Claude lee esto para decidir
   si invoca al agente automáticamente.
-tools: Bash, Read, Grep        # tools permitidos (csv)
-model: sonnet                   # opcional: sonnet, opus, haiku, inherit
+tools: Bash, Read, Grep # tools permitidos (csv)
+model: sonnet # opcional: sonnet, opus, haiku, inherit
 ---
-
 # Instrucciones del agente
 
 Aquí va el system prompt completo.
@@ -104,12 +170,12 @@ solo ve este prompt + lo que el agente principal le pasa.
 
 ### Campos opcionales del frontmatter
 
-| Campo | Qué hace | Ejemplo |
-|-------|----------|---------|
-| `model` | Modelo que usa el subagente | `haiku` (barato y rápido) |
-| `permissionMode` | Nivel de permisos | `auto`, `default`, `plan` |
-| `background` | Corre en background | `true` |
-| `skills` | Skills precargados | `[testing-patterns]` |
+| Campo            | Qué hace                    | Ejemplo                   |
+| ---------------- | --------------------------- | ------------------------- |
+| `model`          | Modelo que usa el subagente | `haiku` (barato y rápido) |
+| `permissionMode` | Nivel de permisos           | `auto`, `default`, `plan` |
+| `background`     | Corre en background         | `true`                    |
+| `skills`         | Skills precargados          | `[testing-patterns]`      |
 
 ### Agentes de este proyecto
 
@@ -154,13 +220,13 @@ comment en GitHub.
 
 ### Cuándo usar un subagente vs. hacerlo inline
 
-| Situación | Usa subagente | Hazlo inline |
-|-----------|:---:|:---:|
-| Tarea repetitiva (correr tests N veces) | ✅ | |
-| No quieres ensuciar el contexto principal | ✅ | |
-| Necesitas un modelo diferente (haiku para algo trivial) | ✅ | |
-| La tarea depende de lo que se acaba de discutir | | ✅ |
-| Cambio de una línea | | ✅ |
+| Situación                                               | Usa subagente | Hazlo inline |
+| ------------------------------------------------------- | :-----------: | :----------: |
+| Tarea repetitiva (correr tests N veces)                 |      ✅       |              |
+| No quieres ensuciar el contexto principal               |      ✅       |              |
+| Necesitas un modelo diferente (haiku para algo trivial) |      ✅       |              |
+| La tarea depende de lo que se acaba de discutir         |               |      ✅      |
+| Cambio de una línea                                     |               |      ✅      |
 
 ---
 
@@ -174,14 +240,15 @@ El archivo `CLAUDE.md` en la raíz del proyecto es lo primero que Claude carga a
 
 **Ubicaciones** (de mayor a menor prioridad):
 
-| Archivo | Quién lo escribe | Se comparte |
-|---------|------------------|-------------|
-| `CLAUDE.md` (raíz del repo) | El equipo | Sí (git) |
-| `.claude/CLAUDE.md` | El equipo | Sí (git) |
-| `CLAUDE.local.md` | Tú | No (gitignored) |
-| `~/.claude/CLAUDE.md` | Tú | No (global para todos tus proyectos) |
+| Archivo                     | Quién lo escribe | Se comparte                          |
+| --------------------------- | ---------------- | ------------------------------------ |
+| `CLAUDE.md` (raíz del repo) | El equipo        | Sí (git)                             |
+| `.claude/CLAUDE.md`         | El equipo        | Sí (git)                             |
+| `CLAUDE.local.md`           | Tú               | No (gitignored)                      |
+| `~/.claude/CLAUDE.md`       | Tú               | No (global para todos tus proyectos) |
 
 **Buenas prácticas:**
+
 - Mantenerlo bajo 200 líneas (se carga en cada sesión).
 - Incluir: stack, comandos, convenciones de naming, reglas prohibidas, patrones de código.
 - NO incluir: tutoriales, documentación exhaustiva, cosas que cambian a menudo.
@@ -224,6 +291,7 @@ Reglas que aplican a TODOS tus proyectos:
 
 ```markdown
 # ~/.claude/CLAUDE.md
+
 - Siempre responde en español.
 - Prefiere rtk para ejecutar comandos de terminal.
 - Nunca auto-commites sin preguntarme.
@@ -237,6 +305,7 @@ El `CLAUDE.md` de Shift Planner incluye:
 ## Estrategia de TanStack Query
 
 ### Reglas de invalidación
+
 Al mutar un shift: invalida ambas vistas relacionadas (day y week).
 Nunca olvides las vistas hermanas.
 ```
@@ -273,13 +342,13 @@ si mañana añado una vista mensual?
 
 ### Cuándo usarlo vs. cuándo no
 
-| Caso | Nivel |
-|------|-------|
-| Decidir entre dos arquitecturas con trade-offs | `ultrathink` o `/effort max` |
-| Diagnosticar un bug complejo con múltiples capas | `ultrathink` |
-| Planificar una migración de schema | `/effort high` |
-| Cambiar un string literal | `/effort low` |
-| Corregir un off-by-one evidente | No necesita |
+| Caso                                             | Nivel                        |
+| ------------------------------------------------ | ---------------------------- |
+| Decidir entre dos arquitecturas con trade-offs   | `ultrathink` o `/effort max` |
+| Diagnosticar un bug complejo con múltiples capas | `ultrathink`                 |
+| Planificar una migración de schema               | `/effort high`               |
+| Cambiar un string literal                        | `/effort low`                |
+| Corregir un off-by-one evidente                  | No necesita                  |
 
 ### Ejemplo en este proyecto (Bug 3)
 
@@ -300,11 +369,11 @@ WeeklyView después de editar un shift. Razona paso a paso:
 
 ### Modelos disponibles
 
-| Alias | Modelo real | Cuándo usarlo |
-|-------|-------------|---------------|
-| `opus` | Opus 4.6 | Bugs complejos, arquitectura, refactors grandes |
-| `sonnet` | Sonnet 4.6 | Trabajo diario, la mayoría de tareas |
-| `haiku` | Haiku 4.5 | Ediciones triviales, renombrar, generar boilerplate |
+| Alias    | Modelo real | Cuándo usarlo                                       |
+| -------- | ----------- | --------------------------------------------------- |
+| `opus`   | Opus 4.6    | Bugs complejos, arquitectura, refactors grandes     |
+| `sonnet` | Sonnet 4.6  | Trabajo diario, la mayoría de tareas                |
+| `haiku`  | Haiku 4.5   | Ediciones triviales, renombrar, generar boilerplate |
 
 ### Cómo cambiar de modelo
 
@@ -349,11 +418,11 @@ Cambia el título de la app de "Shift Planner" a "Shift Planner · Demo"
 
 ### ¿Por qué importa?
 
-| Modelo | Velocidad | Costo | Profundidad |
-|--------|-----------|-------|-------------|
-| Haiku | Rápido (~2s) | Bajo | Superficial |
-| Sonnet | Medio (~5s) | Medio | Buena |
-| Opus | Lento (~15s) | Alto | Máxima |
+| Modelo | Velocidad    | Costo | Profundidad |
+| ------ | ------------ | ----- | ----------- |
+| Haiku  | Rápido (~2s) | Bajo  | Superficial |
+| Sonnet | Medio (~5s)  | Medio | Buena       |
+| Opus   | Lento (~15s) | Alto  | Máxima      |
 
 Usar el modelo correcto para cada tarea es como elegir la herramienta correcta: no uses un mazo para clavar una tachuela.
 
@@ -398,14 +467,14 @@ description: >
 
 ### Campos del frontmatter
 
-| Campo | Qué hace | Ejemplo |
-|-------|----------|---------|
-| `name` | Identificador (obligatorio) | `commit-conventional` |
-| `description` | Cuándo usar (obligatorio) | "Use cuando quiera generar un commit" |
-| `disable-model-invocation` | Solo manual (`true`) o auto (`false`) | `true` |
-| `allowed-tools` | Tools sin pedir permiso | `Bash(git *)` |
-| `context` | Correr en subagente | `fork` |
-| `paths` | Solo para ciertos archivos | `["src/features/**"]` |
+| Campo                      | Qué hace                              | Ejemplo                               |
+| -------------------------- | ------------------------------------- | ------------------------------------- |
+| `name`                     | Identificador (obligatorio)           | `commit-conventional`                 |
+| `description`              | Cuándo usar (obligatorio)             | "Use cuando quiera generar un commit" |
+| `disable-model-invocation` | Solo manual (`true`) o auto (`false`) | `true`                                |
+| `allowed-tools`            | Tools sin pedir permiso               | `Bash(git *)`                         |
+| `context`                  | Correr en subagente                   | `fork`                                |
+| `paths`                    | Solo para ciertos archivos            | `["src/features/**"]`                 |
 
 ### Variables disponibles
 
@@ -441,11 +510,11 @@ ${CLAUDE_SKILL_DIR}  # directorio del skill (para archivos de apoyo)
 
 ### Skill vs. Agente: ¿cuál uso?
 
-| Necesitas... | Usa |
-|-------------|-----|
-| Un prompt reutilizable que el usuario invoca con `/` | **Skill** |
-| Un contexto aislado con sus propias tools y modelo | **Agente** |
-| Ambos (receta invocable que corre en otro contexto) | Skill con `context: fork` |
+| Necesitas...                                         | Usa                       |
+| ---------------------------------------------------- | ------------------------- |
+| Un prompt reutilizable que el usuario invoca con `/` | **Skill**                 |
+| Un contexto aislado con sus propias tools y modelo   | **Agente**                |
+| Ambos (receta invocable que corre en otro contexto)  | Skill con `context: fork` |
 
 ---
 
@@ -494,11 +563,11 @@ El texto después del nombre reemplaza `$ARGUMENTS`.
 
 ### Comandos de este proyecto
 
-| Comando | Qué hace |
-|---------|----------|
-| `/project:explore-bug <síntoma>` | Diagnóstica sin tocar código |
-| `/project:plan-fix` | Genera plan de fix estructurado |
-| `/project:review-pr` | Invoca al agente code-reviewer |
+| Comando                          | Qué hace                        |
+| -------------------------------- | ------------------------------- |
+| `/project:explore-bug <síntoma>` | Diagnóstica sin tocar código    |
+| `/project:plan-fix`              | Genera plan de fix estructurado |
+| `/project:review-pr`             | Invoca al agente code-reviewer  |
 
 ### Ejemplo de flujo completo
 
@@ -515,6 +584,140 @@ adelante
 # Paso 4: commit
 /commit-conventional
 ```
+
+---
+
+## 8. Hooks
+
+### ¿Qué es?
+
+Los hooks son **scripts de shell que se ejecutan automáticamente** en respuesta a eventos de Claude Code. Permiten automatizar tareas como logging, validación, formateo, o notificaciones sin intervención manual.
+
+A diferencia de los agentes o skills (que Claude invoca), los hooks los ejecuta **el sistema** de forma transparente antes o después de ciertas acciones.
+
+### ¿Dónde se configuran?
+
+| Scope    | Archivo                       | Se comparte por git |
+| -------- | ----------------------------- | ------------------- |
+| Proyecto | `.claude/settings.json`       | Sí                  |
+| Personal | `.claude/settings.local.json` | No                  |
+| Usuario  | `~/.claude/settings.json`     | No                  |
+
+La configuración vive dentro de la clave `"hooks"` del JSON de settings.
+
+### Eventos disponibles
+
+| Evento         | Cuándo se dispara                    | Caso de uso típico                  |
+| -------------- | ------------------------------------ | ----------------------------------- |
+| `PreToolUse`   | Antes de ejecutar una tool           | Validar, bloquear acciones          |
+| `PostToolUse`  | Después de ejecutar una tool         | Logging, formateo, notificaciones   |
+| `Notification` | Cuando Claude emite una notificación | Alertas externas (Slack, desktop)   |
+| `Stop`         | Cuando Claude termina su turno       | Limpieza, resúmenes post-sesión     |
+| `SubagentStop` | Cuando un subagente termina          | Logging de resultados de subagentes |
+
+### Formato de configuración
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/mi-script.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+- **`matcher`**: regex que filtra por nombre de tool (`Edit`, `Write`, `Bash`, etc.). Si se omite, el hook corre para todas las tools.
+- **`type`**: siempre `"command"`.
+- **`command`**: ruta al script (relativa al proyecto o absoluta).
+- **`timeout`**: segundos máximos de ejecución (default: 60).
+
+### JSON que recibe el hook por stdin
+
+El hook recibe un JSON por stdin con información del evento:
+
+```json
+{
+  "session_id": "abc123",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/ruta/al/archivo.ts",
+    "old_string": "...",
+    "new_string": "..."
+  },
+  "tool_response": "..."
+}
+```
+
+Los campos varían según el evento y la tool. Para `Edit`/`Write`, `tool_input.file_path` siempre indica el archivo afectado.
+
+### Protocolo de exit codes
+
+| Exit code | Efecto                                                     |
+| --------- | ---------------------------------------------------------- |
+| `0`       | OK — el hook terminó correctamente                         |
+| `2`       | **Bloquear** — la acción se cancela (solo en `PreToolUse`) |
+| Otro      | Error — se muestra al usuario pero no bloquea              |
+
+Si el hook escribe a **stdout**, el mensaje se muestra a Claude como feedback. Si escribe a **stderr**, se muestra al usuario como advertencia.
+
+### Hook de este proyecto: TODO Logger
+
+El proyecto incluye un hook `PostToolUse` que detecta comentarios `TODO`, `FIXME`, `HACK` y `XXX` en archivos editados por Claude y los registra en `TODO_LOG.md`.
+
+**Configuración** (`.claude/settings.json`):
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/todo-logger.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Script** (`.claude/hooks/todo-logger.sh`):
+
+1. Lee el JSON del evento por stdin.
+2. Extrae `tool_input.file_path` con `jq`.
+3. Ejecuta `grep -n -E 'TODO|FIXME|HACK|XXX'` sobre el archivo.
+4. Si hay matches, los escribe en `TODO_LOG.md` con timestamp.
+5. Sale con `exit 0` siempre — no bloquea nada.
+
+**`TODO_LOG.md`** está en `.gitignore` porque es un log local de cada desarrollador.
+
+### Cómo verificar
+
+```
+/hooks
+```
+
+Muestra todos los hooks registrados con su estado. El hook `todo-logger.sh` debe aparecer asociado al evento `PostToolUse` con matcher `Edit|Write`.
+
+**Prueba manual:**
+
+1. Pide a Claude que edite un archivo añadiendo un `// TODO: algo`.
+2. Verifica que `TODO_LOG.md` se creó en la raíz del proyecto.
+3. El archivo debe contener la fecha, ruta del archivo, número de línea y contenido del TODO.
 
 ---
 
@@ -535,7 +738,9 @@ adelante
 │  │  .claude/                                        │   │
 │  │  ├── agents/        → subagentes aislados        │   │
 │  │  ├── skills/        → prompts reutilizables      │   │
-│  │  └── commands/      → slash commands simples     │   │
+│  │  ├── commands/      → slash commands simples     │   │
+│  │  ├── hooks/         → scripts automáticos        │   │
+│  │  └── settings.json  → config de hooks            │   │
 │  └─────────────────────────────────────────────────┘   │
 │                                                        │
 │  ┌─────────────────────────────────────────────────┐   │
@@ -561,6 +766,9 @@ adelante
 
 # MCP
 /mcp                           # ver servidores conectados
+
+# Hooks
+/hooks                         # ver hooks registrados
 
 # Skills y comandos del proyecto
 /commit-conventional           # generar commit message
