@@ -7,9 +7,7 @@ export function computeWeeklyHours(shifts) {
     for (const shift of shifts) {
         const [sh, sm] = shift.startTime.split(':').map(Number);
         const [eh, em] = shift.endTime.split(':').map(Number);
-        // BUG: se descuenta 1h "por descanso" como si fuese política,
-        // pero el spec dice que las horas se calculan brutas.
-        total += eh - sh - 1 + (em - sm) / 60;
+        total += eh - sh + (em - sm) / 60;
     }
     return total;
 }

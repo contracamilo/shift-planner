@@ -6,10 +6,10 @@ export function useUpdateShift() {
   return useMutation({
     mutationFn: updateShiftApi,
     onSuccess: (_data, variables) => {
-      // Solo invalida la vista diaria.
       qc.invalidateQueries({ queryKey: ['schedule', 'day', variables.date] });
-      // BUG: falta invalidar la vista semanal.
-      // qc.invalidateQueries({ queryKey: ['schedule', 'week', variables.weekId] });
+      qc.invalidateQueries({
+        queryKey: ['schedule', 'week', variables.weekId],
+      });
     },
   });
 }
