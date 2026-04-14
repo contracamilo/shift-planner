@@ -5,9 +5,6 @@ import { employees, shifts, WEEK_ID } from './data';
 // In-memory snapshot so PUTs persist across GETs during a session.
 const currentShifts: Shift[] = shifts.map((s) => ({ ...s }));
 
-// Variable compartida en closure — OJO: race real.
-let lastUpdated: Shift | null = null;
-
 export const handlers = [
   http.get('/api/employees', async () => {
     await delay(30);
@@ -29,17 +26,14 @@ export const handlers = [
   }),
 
   http.put('/api/shifts/:id', async ({ request, params }) => {
-    // BUG: `lastUpdated` se guarda en el closure antes del await y luego
-    // se retorna. Si dos PUTs entran seguidos, la primera respuesta ve
-    // el payload del segundo.
-    lastUpdated = (await request.json()) as Shift;
+    const payload = (await request.json()) as Shift;
     const id = params.id as string;
     const idx = currentShifts.findIndex((s) => s.id === id);
     if (idx >= 0) {
-      currentShifts[idx] = { ...currentShifts[idx], ...lastUpdated };
+      currentShifts[idx] = { ...currentShifts[idx], ...payload };
     }
-    await delay(50 + Math.random() * 80); // latencia variable
-    return HttpResponse.json(lastUpdated);
+    await delay(50 + Math.random() * 80);
+    return HttpResponse.json(payload);
   }),
 ];
 
